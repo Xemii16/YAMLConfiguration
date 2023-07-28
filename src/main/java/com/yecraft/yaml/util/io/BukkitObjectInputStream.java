@@ -1,11 +1,11 @@
-package com.yecraft.util.io;
+package com.yecraft.yaml.util.io;
+
+import com.yecraft.yaml.configuration.serialization.ConfigurationSerializable;
+import com.yecraft.yaml.configuration.serialization.ConfigurationSerialization;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-
-import com.yecraft.yaml.configuration.serialization.ConfigurationSerializable;
-import com.yecraft.yaml.configuration.serialization.ConfigurationSerialization;
 
 /**
  * This class is designed to be used in conjunction with the {@link
@@ -21,8 +21,9 @@ public class BukkitObjectInputStream extends ObjectInputStream {
     /**
      * Constructor provided to mirror super functionality.
      *
-     * @throws IOException
-     * @throws SecurityException
+     * @throws IOException if an I/O error occurs while creating this stream
+     * @throws SecurityException if a security manager exists and denies
+     * enabling subclassing
      * @see ObjectInputStream#ObjectInputStream()
      */
     protected BukkitObjectInputStream() throws IOException, SecurityException {
@@ -33,8 +34,8 @@ public class BukkitObjectInputStream extends ObjectInputStream {
     /**
      * Object input stream decoration constructor.
      *
-     * @param in
-     * @throws IOException
+     * @param in the input stream to wrap
+     * @throws IOException if an I/O error occurs while reading stream header
      * @see ObjectInputStream#ObjectInputStream(InputStream)
      */
     public BukkitObjectInputStream(InputStream in) throws IOException {
