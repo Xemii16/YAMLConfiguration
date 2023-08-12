@@ -1,14 +1,11 @@
 package com.yecraft.configuration;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,65 +15,65 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class ConfigurationTest {
 
-    private Configuration config;
+    private Configuration underTest;
     private String version;
     @TempDir
     private Path path;
 
     @BeforeEach
     void setUp() {
+        path = path.resolve("config.yml");
         this.version = "1.0";
-        Path path1 = path.resolve("config.yml");
-        this.config = new Config(version, path1);
+        this.underTest = new Config(version, LoggerFactory.getLogger(ConfigurationTest.class), path);
     }
 
     @Test
     @DisplayName("Config initialize")
     void canInitialize() {
-        config.initialize();
-        assertThat(config.getConfiguration()).isNotNull();
+        underTest.initialize();
+        assertThat(underTest.getConfiguration()).isNotNull();
     }
 
     @Test
     void testLoadWithArgument() {
-        config.load(path.toFile());
-        assertThat(config.getConfiguration()).isNotNull();
+        underTest.load(path.toFile());
+        assertThat(underTest.getConfiguration()).isNotNull();
     }
 
     @Test
     void testSaveWithArgument() {
-        config.initialize();
-        config.save(path.toFile());
+        underTest.initialize();
+        underTest.save(path.toFile());
         assertThat(path.toFile()).exists();
     }
 
     @Test
     void testLoadWithoutArgument() {
-        config.load();
-        assertThat(config.getConfiguration()).isNotNull();
+        underTest.load();
+        assertThat(underTest.getConfiguration()).isNotNull();
     }
 
     @Test
     void testDefaults() {
-        config.initialize();
-        assertThat(config.getString("string")).hasValue("string");
-        assertThat(config.getComments("string")).contains(List.of("comment"));
-        assertThat(config.getString("map.string")).hasValue("string");
+        underTest.initialize();
+        assertThat(underTest.getString("string")).hasValue("string");
+        assertThat(underTest.getComments("string")).contains(List.of("comment"));
+        assertThat(underTest.getString("map.string")).hasValue("string");
     }
 
     @Test
     void testSaveWithoutArguments() {
-        config.initialize();
-        config.save();
-        assertThat(config.getConfiguration()).isNotNull();
+        underTest.initialize();
+        underTest.save();
+        assertThat(underTest.getConfiguration()).isNotNull();
         assertThat(this.path.toFile()).exists();
     }
 
     @Test
     void checkVersion() {
-        config.initialize();
+        underTest.initialize();
         Path path1 = path.resolve("config.yml");
-        ConfigCopy copy = new ConfigCopy("1.1", path1);
+        ConfigCopy copy = new ConfigCopy("1.1", LoggerFactory.getLogger(ConfigurationTest.class), path1);
         copy.initialize();
         assertThat(copy.getString("string")).hasValue("string-copy");
     }
@@ -84,26 +81,14 @@ class ConfigurationTest {
     @Test
     //TODO solve the overwriting issue
     void checkIfDefaultsChangesAfterReload(){
-        config.initialize();
-        config.set("string", "string-change");
-        config.save();
-        config.initialize();
-        assertThat(config.getString("string")).hasValue("string-change");
+        underTest.initialize();
+        underTest.set("string", "string-change");
+        underTest.save();
+        underTest.initialize();
+        assertThat(underTest.getString("string")).hasValue("string-change");
     }
 
-    static class Config extends Configuration {
-
-        public Config(String version, File file) {
-            super(version, file);
-        }
-
-        public Config(String version, Path path) {
-            super(version, path);
-        }
-
-        public Config(String version, @NotNull Logger logger, @NotNull File file) {
-            super(version, logger, file);
-        }
+    class Config extends Configuration {
 
         public Config(String version, @NotNull Logger logger, @NotNull Path path) {
             super(version, logger, path);
@@ -125,19 +110,7 @@ class ConfigurationTest {
         }
     }
 
-    static class ConfigCopy extends Configuration {
-
-        public ConfigCopy(String version, File file) {
-            super(version, file);
-        }
-
-        public ConfigCopy(String version, Path path) {
-            super(version, path);
-        }
-
-        public ConfigCopy(String version, @NotNull Logger logger, @NotNull File file) {
-            super(version, logger, file);
-        }
+    class ConfigCopy extends Configuration {
 
         public ConfigCopy(String version, @NotNull Logger logger, @NotNull Path path) {
             super(version, logger, path);

@@ -98,7 +98,7 @@ public abstract class Configuration extends AbstractConfiguration implements Def
     }
 
     private void setVersionConfig() {
-        addDefault("version", version);
+        set("version", version);
     }
 
     private void createConfig() {
@@ -165,6 +165,7 @@ public abstract class Configuration extends AbstractConfiguration implements Def
     @Override
     public boolean checkVersion() {
         Optional<String> optional = getString("version");
-        return optional.map(s -> s.equals(version)).orElse(false);
+        if (optional.isEmpty()) return false;
+        return optional.get().equalsIgnoreCase(version);
     }
 }

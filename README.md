@@ -8,12 +8,12 @@ Optional#empty() is received. Also added config with creation, saving and loadin
 <dependency>
   <groupId>com.yecraft</groupId>
   <artifactId>yaml-configuration</artifactId>
-  <version>1.0.2</version>
+  <version>2.0.3-alpha</version>
 </dependency>
 ```
 ### Gradle
 ```
-implementation 'com.yecraft:yaml-configuration:1.0.2'
+implementation 'com.yecraft:yaml-configuration:2.0.3-alpha'
 ```
 ## Use with Bukkit API
 If you are using the Bukkit API dependency, add the following setting to your pom.xml
