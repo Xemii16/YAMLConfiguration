@@ -66,6 +66,8 @@ public abstract class Configuration extends AbstractConfiguration implements Def
      * and also loads the config
      * You need to call the method
      * before getting the values from the config
+     * If the version is changed in the class constructor,
+     * then the config will overload all values to the ones set in {@link #defaults()}, {@link #defaultComments()}
      */
     @Override
     public void initialize() {
@@ -124,7 +126,6 @@ public abstract class Configuration extends AbstractConfiguration implements Def
         setConfiguration(YamlConfiguration.loadConfiguration(file));
         return getConfiguration();
     }
-
     @Override
     protected void save(File file) {
         Validate.notNull(file, "File cannot be null");
@@ -147,7 +148,17 @@ public abstract class Configuration extends AbstractConfiguration implements Def
         return load(this.file);
     }
 
+    /**
+     * Adds default values to the config that are added after initialization
+     * @return Default values that will be added to the config
+     */
     public abstract Map<String, Object> defaults();
+
+    /**
+     * Comments that are added to the default values {@link #defaults()}
+     * @return Comments that will be added to the default values
+     * of the config during initialization
+     */
     public abstract Map<String, List<String>> defaultComments();
 
     /**

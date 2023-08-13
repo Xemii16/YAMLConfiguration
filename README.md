@@ -15,40 +15,75 @@ Optional#empty() is received. Also added config with creation, saving and loadin
 ```
 implementation 'com.yecraft:yaml-configuration:2.0.3-alpha'
 ```
-## Use with Bukkit API
-If you are using the Bukkit API dependency, add the following setting to your pom.xml
-```
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>shade</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <relocations>
-                        <relocation>
-                            <pattern>org.bukkit</pattern>
-                            <shadedPattern>com.example.libraries.bukkit.configuration</shadedPattern>
-                        </relocation>
-                    </relocations>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-```
 
 ## Basic config
+
 ```java
-class BasicConfig {
+package com.example.plugin.config;
+
+import com.yecraft.configuration.Configuration;
+
+import java.util.Map;
+
+class BasicConfig extends Configuration {
+
+    public MainConfiguration(String version, File file) {
+        super(version, file);
+    }
+
+    @Override
+    public Map<String, Object> defaults() {
+        // Default values that are added after creating the config
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("redis", false);
+        // Creating a section
+        map.put("section", Map.of("test, example"));
+        return map;
+    }
+
+    @Override
+    public Map<String, List<String>> defaultComments() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        // To create a comment, the specified path must be created
+        map.put("redis", List.of("Whether to enable the database"));
+        return map;
+    }
+}
+```
+
+```java
+package com.example.plugin;
+
+import com.yecraft.configuration.Configuration;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.util.Optional;
+
+import com.example.plugin.config.BasicConfig;
+
+class Plugin extends JavaPlugin {
     
+    private Configuration configuration;
+    
+    public Plugin(){
+        // When the version is changed,
+        // the config automatically changes 
+        // the default values to those specified in the class
+        this.configuration = new BasicConfig("1.0", new File(getDataFolder(), "config.yml"));
+    }
+    @Override
+    public void onEnable(){
+        // The file is created if it does not exist,
+        // the version is checked and if it does not match the config is updated
+        // and downloaded for further actions
+        configuration.initialize();
+        
+        Optional<String> version = configuration.getString("version");
+        version.ifPresent(System.out::println);
+        
+        Optional<String> example = configuration.getString("section.test");
+        example.ifPresent(System.out::println);
+    }
 }
 ```
