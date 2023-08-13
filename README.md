@@ -8,12 +8,12 @@ Optional#empty() is received. Also added config with creation, saving and loadin
 <dependency>
   <groupId>com.yecraft</groupId>
   <artifactId>yaml-configuration</artifactId>
-  <version>2.0.3-alpha</version>
+  <version>2.0.3-beta</version>
 </dependency>
 ```
 ### Gradle
 ```
-implementation 'com.yecraft:yaml-configuration:2.0.3-alpha'
+implementation 'com.yecraft:yaml-configuration:2.0.3-beta'
 ```
 
 ## Basic config
@@ -24,6 +24,7 @@ package com.example.plugin.config;
 import com.yecraft.configuration.Configuration;
 
 import java.util.Map;
+import java.util.List;
 
 class BasicConfig extends Configuration {
 
