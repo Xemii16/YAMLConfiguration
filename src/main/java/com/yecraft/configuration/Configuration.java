@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,12 +20,10 @@ public abstract class Configuration extends AbstractConfiguration implements Def
     private final String version;
     private final Logger logger;
     private final File file;
-    private Map<String, Object> defaults;
     public Configuration(String version, File file) {
         super();
         this.version = version;
-        Validate.notNull(file, "File cannot be null");
-        Validate.isTrue(file.getName().endsWith(".yml"), "The file is not a configuration (example.yml)", file.getName());
+        validateNotNull(file);
         this.file = file;
         this.logger = LoggerFactory.getLogger(Configuration.class);
     }
@@ -41,8 +40,7 @@ public abstract class Configuration extends AbstractConfiguration implements Def
     public Configuration(String version, @NotNull Logger logger, @NotNull File file) {
         super();
         this.version = version;
-        Validate.notNull(file, "File cannot be null");
-        Validate.isTrue(file.getName().endsWith(".yml"), "The file is not a configuration (example.yml)", file.getName());
+        validateNotNull(file);
         Validate.notNull(logger, "Logger cannot be null");
         this.logger = logger;
         this.file = file;
@@ -58,34 +56,57 @@ public abstract class Configuration extends AbstractConfiguration implements Def
         this.file = path.toFile();
     }
 
+    private static void validateNotNull(File file) {
+        Validate.notNull(file, "File cannot be null");
+        Validate.isTrue(file.getName().endsWith(".yml"), "The file is not a configuration (example.yml)", file.getName());
+    }
+
     /**
      * Creates a file, directories if they do not exist
      * and also loads the config
      * You need to call the method
      * before getting the values from the config
+     * If the version is changed in the class constructor,
+     * then the config will overload all values to the ones set in {@link #defaults()}, {@link #defaultComments()}
      */
     @Override
     public void initialize() {
         if (file.exists()){
-            setConfiguration(load(this.file));
-            if (!checkVersion()){
-                defaults();
-                setVersionConfig();
-                save(file);
-            }
+            load(this.file);
+            checkDefaults();
+            save(file);
             return;
         }
         createConfig();
     }
 
+    private void checkDefaults(File file) {
+        if (!checkVersion()){
+            setVersionConfig();
+            defaults().forEach((str, obj) -> {
+                if (obj instanceof Map<?,?>){
+                    createSection(str, (Map<?, ?>) obj);
+                    return;
+                }
+                set(str, obj);
+            });
+            defaultComments().forEach(this::setComments);
+            save(file);
+        }
+    }
+
+    private void checkDefaults() {
+        checkDefaults(this.file);
+    }
+
     private void setVersionConfig() {
-        addDefault("version", version);
+        set("version", version);
     }
 
     private void createConfig() {
         createFile();
         setConfiguration(load(file));
-        defaults();
+        checkDefaults();
         setVersionConfig();
         save(file);
     }
@@ -102,9 +123,9 @@ public abstract class Configuration extends AbstractConfiguration implements Def
     @Override
     protected FileConfiguration load(File file) {
         Validate.notNull(file, "File cannot be null");
-        return YamlConfiguration.loadConfiguration(file);
+        setConfiguration(YamlConfiguration.loadConfiguration(file));
+        return getConfiguration();
     }
-
     @Override
     protected void save(File file) {
         Validate.notNull(file, "File cannot be null");
@@ -120,14 +141,25 @@ public abstract class Configuration extends AbstractConfiguration implements Def
     /**
      * Loads the configuration file into memory.
      * It may give an error if the file does not exist or its extension is incorrect
-     * @return Configuration from file
+     * @return {@code Configuration} from file
      */
     @Override
     public FileConfiguration load() {
         return load(this.file);
     }
 
-    public abstract void defaults();
+    /**
+     * Adds default values to the config that are added after initialization
+     * @return Default values that will be added to the config
+     */
+    public abstract Map<String, Object> defaults();
+
+    /**
+     * Comments that are added to the default values {@link #defaults()}
+     * @return Comments that will be added to the default values
+     * of the config during initialization
+     */
+    public abstract Map<String, List<String>> defaultComments();
 
     /**
      * Saves the configuration to a file
@@ -137,9 +169,14 @@ public abstract class Configuration extends AbstractConfiguration implements Def
         save(this.file);
     }
 
+    /**
+     * Checking the configuration version (to change the default settings if the version has been updated)
+     * @return Coincidence with the version specified in the class ({@code true} - matches, {@code false} - does not match)
+     */
     @Override
     public boolean checkVersion() {
         Optional<String> optional = getString("version");
-        return optional.map(s -> s.equals(version)).orElse(false);
+        if (optional.isEmpty()) return false;
+        return optional.get().equalsIgnoreCase(version);
     }
 }
